@@ -1,0 +1,17 @@
+# AI Excuse Generator Environment Configuration
+
+# Flask Configuration
+SECRET_KEY=your-super-secret-key-here-change-this-in-production
+FLASK_ENV=development
+FLASK_DEBUG=True
+
+# OpenAI API Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Database Configuration (SQLite by default)
+DATABASE_URL=sqlite:///excuse_generator.db
+
+# Optional: External Services
+# GOOGLE_SPEECH_API_KEY=your-google-speech-api-key
+# AZURE_SPEECH_KEY=your-azure-speech-key
+# AZURE_SPEECH_REGION=your-azure-speech-region

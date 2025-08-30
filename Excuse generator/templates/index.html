@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}AI Excuse Generator - Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1>AI-Powered Excuse Generator</h1>
+        <p>Generate believable, context-aware excuses with AI intelligence. Perfect for work, school, social, and family situations.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-rocket me-2"></i>Get Started
+            </a>
+            <a href="#features" class="btn btn-secondary btn-lg">
+                <i class="fas fa-info-circle me-2"></i>Learn More
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="text-white mb-4">Why Choose Our AI Excuse Generator?</h2>
+                <p class="text-white-50">Advanced AI technology that creates natural, believable excuses for any situation</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h5>AI-Powered Generation</h5>
+                    <p>Advanced language models create natural, context-aware excuses that sound human-written.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h5>Proof Generation</h5>
+                    <p>Automatically generate supporting documents, certificates, and evidence for your excuses.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-phone-alt"></i>
+                    </div>
+                    <h5>Emergency System</h5>
+                    <p>Trigger fake emergency calls and texts to support your excuse with immediate urgency.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h5>Multi-Language</h5>
+                    <p>Generate excuses in multiple languages for global use and cultural appropriateness.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-microphone"></i>
+                    </div>
+                    <h5>Voice Integration</h5>
+                    <p>Convert excuses to speech and use voice commands for hands-free operation.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h5>Smart Ranking</h5>
+                    <p>AI ranks excuses by effectiveness based on past success rates and user feedback.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h5>Apology Generator</h5>
+                    <p>Create sincere, guilt-tripping apologies in various styles and tones.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="feature-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h5>Excuse History</h5>
+                    <p>Track all your excuses, save favorites, and learn from past effectiveness.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="text-white mb-4">How It Works</h2>
+                <p class="text-white-50">Simple steps to generate the perfect excuse</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 text-center mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="feature-icon">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <h5>1. Choose Your Scenario</h5>
+                        <p>Select from work, school, social, or family situations and set urgency level.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 text-center mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="feature-icon">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <h5>2. AI Generates Excuse</h5>
+                        <p>Our AI creates a natural, believable excuse tailored to your specific situation.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 text-center mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="feature-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h5>3. Get Supporting Proof</h5>
+                        <p>Generate documents, trigger emergency systems, and create apologies as needed.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Demo Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="card excuse-generator">
+                    <div class="text-center mb-4">
+                        <h3>Try It Now!</h3>
+                        <p class="text-muted">Experience the power of AI-generated excuses</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="demo-scenario" class="form-label">Scenario</label>
+                            <select class="form-select" id="demo-scenario">
+                                <option value="work">Work</option>
+                                <option value="school">School</option>
+                                <option value="social">Social</option>
+                                <option value="family">Family</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="demo-urgency" class="form-label">Urgency</label>
+                            <select class="form-select" id="demo-urgency">
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button class="btn btn-primary" onclick="generateDemoExcuse()">
+                            <i class="fas fa-magic me-2"></i>Generate Demo Excuse
+                        </button>
+                    </div>
+                    
+                    <div id="demo-output" class="excuse-output" style="display: none;">
+                        <h5>Generated Excuse:</h5>
+                        <p id="demo-excuse-text"></p>
+                        <small class="text-muted">This is a demo. Register to save and customize your excuses!</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5">
+    <div class="container text-center">
+        <div class="card">
+            <div class="card-body py-5">
+                <h3>Ready to Generate Perfect Excuses?</h3>
+                <p class="text-muted mb-4">Join thousands of users who trust our AI to create believable excuses</p>
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>Create Free Account
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function generateDemoExcuse() {
+    const scenario = document.getElementById('demo-scenario').value;
+    const urgency = document.getElementById('demo-urgency').value;
+    
+    // Demo excuses for demonstration
+    const demoExcuses = {
+        'work': {
+            'low': 'I have a previous commitment that I need to attend to. It\'s something I scheduled weeks ago and unfortunately can\'t reschedule.',
+            'medium': 'I\'m experiencing some technical difficulties with my equipment that are preventing me from working effectively today.',
+            'high': 'I have a family emergency that requires my immediate attention. I need to leave right away to handle this urgent situation.'
+        },
+        'school': {
+            'low': 'I have a conflicting appointment that I can\'t reschedule. It\'s something important that I need to take care of.',
+            'medium': 'I have a family matter that needs my attention today. It\'s not extremely urgent but does require my presence.',
+            'high': 'I\'m feeling very ill and need to rest. I think I might have caught something and don\'t want to spread it to others.'
+        },
+        'social': {
+            'low': 'I have a previous engagement that I committed to before this invitation. I really wish I could make it work.',
+            'medium': 'I\'m not feeling well today and think it would be best if I stay home to recover.',
+            'high': 'There\'s a family emergency that I need to deal with immediately. I\'m really sorry for the last-minute cancellation.'
+        },
+        'family': {
+            'low': 'I have a work commitment that I can\'t get out of. It\'s something important that requires my attention.',
+            'medium': 'I\'m not feeling well and think it would be best if I stay home today to avoid getting anyone else sick.',
+            'high': 'I have an urgent work situation that requires my immediate attention. I need to handle this right away.'
+        }
+    };
+    
+    const excuse = demoExcuses[scenario][urgency];
+    document.getElementById('demo-excuse-text').textContent = excuse;
+    document.getElementById('demo-output').style.display = 'block';
+    
+    // Scroll to the output
+    document.getElementById('demo-output').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+{% endblock %}

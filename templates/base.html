@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}ExcuseAI{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { display:['Syne','sans-serif'], body:['DM Sans','sans-serif'] },
+          colors: {
+            surface: { DEFAULT:'#0d1117', card:'#161b22', elevated:'#1c2128', border:'#30363d' },
+            neon: '#22d3ee', ember: '#f97316',
+          },
+          animation: {
+            'fade-in':'fadeIn .35s ease both',
+            'slide-up':'slideUp .4s ease both',
+            'sos-pulse':'sosPulse 1.8s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeIn:    {from:{opacity:'0'},to:{opacity:'1'}},
+            slideUp:   {from:{opacity:'0',transform:'translateY(14px)'},to:{opacity:'1',transform:'translateY(0)'}},
+            sosPulse:  {'0%,100%':{boxShadow:'0 0 0 0 rgba(239,68,68,0.55)'},'70%':{boxShadow:'0 0 0 18px rgba(239,68,68,0)'}},
+          },
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    body{font-family:'DM Sans',sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh}
+    h1,h2,h3,h4,h5,h6,.font-display{font-family:'Syne',sans-serif}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0d1117}
+    ::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
+    ::-webkit-scrollbar-thumb:hover{background:#22d3ee}
+
+    .glass{background:rgba(22,27,34,.88);backdrop-filter:blur(18px);border:1px solid #30363d}
+    .card{background:#161b22;border:1px solid #30363d;border-radius:12px;transition:border-color .25s,box-shadow .25s}
+    .card:hover{border-color:rgba(34,211,238,.35);box-shadow:0 0 22px rgba(34,211,238,.08)}
+
+    .inp{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:10px 14px;
+         color:#e6edf3;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s}
+    .inp:focus{border-color:#22d3ee;box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+    .inp::placeholder{color:#484f58}
+    select.inp option{background:#161b22}
+    textarea.inp{resize:vertical;min-height:80px}
+
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border:none;border-radius:8px;
+         font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s;white-space:nowrap}
+    .btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+    .btn-primary{background:linear-gradient(135deg,#0ea5e9,#22d3ee);color:#0d1117}
+    .btn-primary:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 0 18px rgba(34,211,238,.4)}
+    .btn-ember{background:linear-gradient(135deg,#f97316,#f59e0b);color:#0d1117}
+    .btn-ember:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 0 18px rgba(249,115,22,.4)}
+    .btn-red{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+    .btn-red:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 0 18px rgba(239,68,68,.4)}
+    .btn-ghost{background:transparent;color:#8b949e;border:1px solid #30363d}
+    .btn-ghost:hover{color:#e6edf3;border-color:#484f58;background:#1c2128}
+    .btn-success{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}
+    .btn-success:hover{opacity:.9;transform:translateY(-1px)}
+
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;font-family:'Syne',sans-serif}
+    .badge-cyan{background:rgba(34,211,238,.12);color:#22d3ee;border:1px solid rgba(34,211,238,.25)}
+    .badge-orange{background:rgba(249,115,22,.12);color:#f97316;border:1px solid rgba(249,115,22,.25)}
+    .badge-red{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.25)}
+    .badge-green{background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.25)}
+    .badge-purple{background:rgba(168,85,247,.12);color:#a855f7;border:1px solid rgba(168,85,247,.25)}
+
+    .tab-bar{display:flex;gap:2px;border-bottom:1px solid #30363d;overflow-x:auto;scrollbar-width:none}
+    .tab-bar::-webkit-scrollbar{display:none}
+    .tab-btn{position:relative;padding:11px 18px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;
+             color:#8b949e;background:transparent;border:none;cursor:pointer;transition:color .2s;white-space:nowrap;flex-shrink:0}
+    .tab-btn::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:#22d3ee;transform:scaleX(0);transition:transform .25s}
+    .tab-btn.active{color:#22d3ee}.tab-btn.active::after{transform:scaleX(1)}
+    .tab-btn:hover:not(.active){color:#c9d1d9}
+    .tab-panel{display:none}.tab-panel.active{display:block;animation:fadeIn .35s ease both}
+
+    .output-box{background:#0d1117;border:1px solid rgba(34,211,238,.3);border-left:3px solid #22d3ee;
+                border-radius:8px;padding:18px;font-size:14px;line-height:1.7;color:#c9d1d9}
+    .email-pre{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:20px;
+               font-size:13px;line-height:1.75;color:#c9d1d9;white-space:pre-wrap;word-break:break-word}
+
+    .spinner{width:18px;height:18px;border:2px solid rgba(34,211,238,.2);
+             border-top-color:#22d3ee;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    #toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;align-items:center;gap:10px;
+           padding:12px 18px;background:#161b22;border:1px solid #30363d;border-radius:10px;
+           font-size:13px;color:#e6edf3;box-shadow:0 8px 28px rgba(0,0,0,.5);
+           opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
+    #toast.show{opacity:1;transform:translateY(0)}
+
+    .star{cursor:pointer;font-size:17px;color:#30363d;transition:color .15s}
+    .star:hover,.star.on{color:#f59e0b}
+
+    .section-label{font-size:11px;font-weight:700;font-family:'Syne',sans-serif;
+                   text-transform:uppercase;letter-spacing:.08em;color:#484f58;margin-bottom:6px}
+
+    #floatSOS{position:fixed;bottom:28px;right:28px;z-index:800;width:54px;height:54px;
+              background:linear-gradient(135deg,#ef4444,#f97316);border:none;border-radius:50%;
+              color:#fff;font-size:18px;cursor:pointer;box-shadow:0 4px 20px rgba(239,68,68,.5);
+              display:flex;align-items:center;justify-content:center;animation:sosPulse 1.8s ease-in-out infinite;
+              transition:transform .2s}
+    #floatSOS:hover{transform:scale(1.12)}
+
+    .modal-bg{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);
+              display:flex;align-items:center;justify-content:center;padding:20px}
+    .modal-box{background:#161b22;border:1px solid #30363d;border-radius:14px;width:100%;max-width:480px;padding:28px;
+               animation:slideUp .35s ease both}
+
+    .nav-pill{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;
+              font-size:13px;font-weight:600;font-family:'Syne',sans-serif;color:#8b949e;
+              text-decoration:none;transition:all .2s}
+    .nav-pill:hover{color:#e6edf3;background:#161b22}
+    .nav-pill.active-nav{color:#22d3ee;background:rgba(34,211,238,.08)}
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body style="background-image:linear-gradient(rgba(34,211,238,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(34,211,238,.022) 1px,transparent 1px);background-size:52px 52px">
+
+<!-- Navbar -->
+<nav class="fixed top-0 inset-x-0 z-50 h-14 border-b border-[#30363d]"
+     style="background:rgba(13,17,23,.92);backdrop-filter:blur(18px)">
+  <div class="max-w-7xl mx-auto px-5 h-full flex items-center justify-between">
+    <a href="{{ url_for('index') }}" class="flex items-center gap-2 no-underline">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-display font-black text-[#0d1117] text-sm">EX</div>
+      <span class="font-display font-bold text-white text-lg">Excuse<span class="text-[#22d3ee]">AI</span></span>
+    </a>
+    <div class="flex items-center gap-1">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('dashboard') }}" class="nav-pill">
+          <i class="fas fa-th-large text-xs"></i> Dashboard
+        </a>
+        <a href="{{ url_for('logout') }}" class="nav-pill">
+          <i class="fas fa-sign-out-alt text-xs"></i> Sign out
+        </a>
+        <div class="ml-2 badge badge-cyan"><i class="fas fa-user text-[9px]"></i> {{ current_user.username }}</div>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="nav-pill">Login</a>
+        <a href="{{ url_for('register') }}"
+           class="btn btn-primary ml-2 py-2 px-5 text-sm">Get Started</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="fixed top-16 inset-x-0 z-40 flex flex-col items-center gap-2 px-4 pt-2 pointer-events-none">
+      {% for category, message in messages %}
+        <div class="max-w-sm w-full px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-2 pointer-events-auto
+          {{ 'bg-emerald-950 border border-emerald-800 text-emerald-300' if category=='success' else 'bg-red-950 border border-red-800 text-red-300' }}">
+          <i class="fas {{ 'fa-check-circle' if category=='success' else 'fa-exclamation-circle' }}"></i>
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<main class="pt-14">{% block content %}{% endblock %}</main>
+
+{% block footer %}
+<footer class="border-t border-[#30363d] mt-16 py-7">
+  <div class="max-w-7xl mx-auto px-5 text-center text-[#484f58] text-xs font-mono">
+    ExcuseAI © 2025 — Powered by Claude AI 🤖 — For entertainment purposes
+  </div>
+</footer>
+{% endblock %}
+
+<div id="toast">
+  <i id="toast-icon" class="fas fa-check-circle text-emerald-400"></i>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast'),icon=document.getElementById('toast-icon');
+  document.getElementById('toast-msg').textContent=msg;
+  icon.className=type==='success'?'fas fa-check-circle text-emerald-400':type==='error'?'fas fa-exclamation-circle text-red-400':'fas fa-info-circle text-cyan-400';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);
+}
+function copyText(text,label='Copied!'){
+  navigator.clipboard.writeText(text).then(()=>showToast(label));
+}
+function initTabs(sel){
+  const c=document.querySelector(sel);if(!c)return;
+  c.querySelectorAll('.tab-btn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      c.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+      c.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      document.getElementById(b.dataset.tab)?.classList.add('active');
+    });
+  });
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

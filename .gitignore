@@ -1,0 +1,19 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# Local environment secrets
+.env
+.env.*
+
+# SQLite database
+instance/*.db
+instance/*.sqlite3
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

@@ -1,0 +1,899 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ExcuseAI{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+  <!-- Header row -->
+  <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+    <div>
+      <h1 class="font-display font-black text-2xl text-white">
+        Good {{ 'morning' if now.hour < 12 else ('afternoon' if now.hour < 17 else 'evening') }},
+        <span class="text-[#22d3ee]">{{ current_user.username }}</span>
+      </h1>
+      <p class="text-[#8b949e] text-sm mt-0.5">What do you need today?</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="card px-4 py-2 flex items-center gap-2 text-sm">
+        <i class="fas fa-scroll text-[#22d3ee] text-xs"></i>
+        <span class="text-[#8b949e]">Total:</span>
+        <span class="font-display font-bold text-white">{{ total_excuses }}</span>
+      </div>
+      <div class="card px-4 py-2 flex items-center gap-2 text-sm">
+        <i class="fas fa-star text-yellow-400 text-xs"></i>
+        <span class="text-[#8b949e]">Saved:</span>
+        <span class="font-display font-bold text-white">{{ fav_count }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab bar -->
+  <div id="mainTabs" class="card rounded-xl overflow-hidden">
+    <div class="tab-bar px-4 pt-1">
+      <button class="tab-btn active" data-tab="tab-excuse"><i class="fas fa-comment-alt mr-1.5"></i>Excuse</button>
+      <button class="tab-btn" data-tab="tab-email"><i class="fas fa-envelope mr-1.5"></i>Email</button>
+      <button class="tab-btn" data-tab="tab-apology"><i class="fas fa-hands mr-1.5"></i>Apology</button>
+      <button class="tab-btn" data-tab="tab-proof"><i class="fas fa-file-alt mr-1.5"></i>Proof Doc</button>
+      <button class="tab-btn" data-tab="tab-emergency"><i class="fas fa-bolt mr-1.5 text-red-400"></i>Emergency</button>
+      <button class="tab-btn" data-tab="tab-history"><i class="fas fa-history mr-1.5"></i>History</button>
+    </div>
+
+    <div class="p-6">
+
+      <!-- ══════════════════════════ EXCUSE ══════════════════════════ -->
+      <div id="tab-excuse" class="tab-panel active">
+        <div class="grid lg:grid-cols-2 gap-6">
+          <!-- Form -->
+          <div class="space-y-4">
+            <div>
+              <div class="section-label">Scenario</div>
+              <select id="ex-scenario" class="inp">
+                <option value="work">💼 Work / Office</option>
+                <option value="school">🎓 School / College</option>
+                <option value="social">🎉 Social Event</option>
+                <option value="family">👨‍👩‍👧 Family Obligation</option>
+                <option value="medical">🏥 Medical Appointment</option>
+                <option value="transport">🚗 Transport Issue</option>
+              </select>
+            </div>
+            <div>
+              <div class="section-label">Urgency Level</div>
+              <div class="flex gap-2">
+                {% for val,label,color in [('low','Low 🟢','btn-ghost'),('medium','Medium 🟡','btn-ghost'),('high','High 🔴','btn-ghost')] %}
+                <button onclick="setUrgency('{{ val }}')" id="urg-{{ val }}"
+                        class="btn {{ color }} flex-1 justify-center urgency-btn text-xs py-2">{{ label }}</button>
+                {% endfor %}
+              </div>
+            </div>
+            <div>
+              <div class="section-label">Language</div>
+              <select id="ex-language" class="inp">
+                <option value="en">🇬🇧 English</option>
+                <option value="hi">🇮🇳 Hindi</option>
+                <option value="es">🇪🇸 Spanish</option>
+                <option value="fr">🇫🇷 French</option>
+                <option value="de">🇩🇪 German</option>
+                <option value="ar">🇸🇦 Arabic</option>
+              </select>
+            </div>
+            <div>
+              <div class="section-label">Your Context <span class="text-[#22d3ee]">(crucial — be specific!)</span></div>
+              <textarea id="ex-context" class="inp" rows="3"
+                placeholder="e.g. My cousin's wedding is in Jaipur this weekend, I told my boss I'd attend but forgot to book leave. My team lead is strict about absences."></textarea>
+              <p class="text-[#484f58] text-xs mt-1.5">
+                <i class="fas fa-info-circle text-[#22d3ee]"></i>
+                The AI will weave your exact details into the excuse — the more specific, the more believable.
+              </p>
+            </div>
+            <button id="btn-gen-excuse" onclick="generateExcuse()" class="btn btn-primary w-full justify-center py-3">
+              <i class="fas fa-magic"></i> Generate Excuse
+            </button>
+          </div>
+
+          <!-- Output -->
+          <div class="flex flex-col gap-4">
+            <div id="excuse-warning" class="hidden rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+              <i class="fas fa-exclamation-triangle mr-2"></i>
+              Backup response mode is active. You can still continue using the demo.
+            </div>
+            <div id="excuse-loading" class="hidden flex items-center gap-3 text-[#8b949e] text-sm">
+              <div class="spinner"></div> Crafting your alibi…
+            </div>
+
+            <div id="excuse-output" class="hidden flex-col gap-4">
+              <div>
+                <div class="section-label">Generated Excuse</div>
+                <div id="excuse-text" class="output-box leading-relaxed"></div>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button onclick="copyExcuse()" class="btn btn-ghost text-xs py-2">
+                  <i class="fas fa-copy"></i> Copy
+                </button>
+                <button onclick="useInEmail()" class="btn btn-ember text-xs py-2">
+                  <i class="fas fa-envelope"></i> Draft Email
+                </button>
+                <button onclick="toggleFav()" id="btn-fav" class="btn btn-ghost text-xs py-2">
+                  <i class="fas fa-star"></i> Save
+                </button>
+                <button onclick="generateExcuse()" class="btn btn-ghost text-xs py-2">
+                  <i class="fas fa-redo"></i> Regenerate
+                </button>
+              </div>
+              <!-- Star rating -->
+              <div>
+                <div class="section-label">How well did it work?</div>
+                <div class="flex gap-1" id="star-row">
+                  {% for i in range(1,6) %}
+                  <span class="star" data-val="{{ i }}" onclick="ratExcuse({{ i }})">★</span>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <div id="excuse-empty" class="flex flex-col items-center justify-center py-14 text-center">
+              <div class="text-4xl mb-3">💬</div>
+              <p class="text-[#484f58] text-sm">Fill in the details and hit Generate</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════ EMAIL ══════════════════════════ -->
+      <div id="tab-email" class="tab-panel">
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <div class="p-3 rounded-lg text-sm flex items-start gap-2"
+                 style="background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.2)">
+              <i class="fas fa-lightbulb text-[#22d3ee] mt-0.5"></i>
+              <span class="text-[#94a3b8]">Generate an excuse first — or paste your own text below to build an email around it.</span>
+            </div>
+            <div>
+              <div class="section-label">Excuse / Reason to use</div>
+              <textarea id="email-excuse" class="inp" rows="3"
+                placeholder="Paste your excuse here or generate one from the Excuse tab…"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="section-label">Recipient Type</div>
+                <select id="email-recipient" class="inp">
+                  <option value="boss">Boss / Manager</option>
+                  <option value="teacher">Teacher / Professor</option>
+                  <option value="hr">HR Department</option>
+                  <option value="client">Client</option>
+                  <option value="colleague">Colleague</option>
+                  <option value="friend">Friend</option>
+                </select>
+              </div>
+              <div>
+                <div class="section-label">Tone</div>
+                <select id="email-tone" class="inp">
+                  <option value="professional">Professional</option>
+                  <option value="formal">Formal</option>
+                  <option value="casual">Casual</option>
+                  <option value="apologetic">Apologetic</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="section-label">Your Name</div>
+                <input id="email-sender" type="text" class="inp" placeholder="{{ current_user.username }}"
+                       value="{{ current_user.username }}"/>
+              </div>
+              <div>
+                <div class="section-label">Recipient Name</div>
+                <input id="email-recip-name" type="text" class="inp" placeholder="Mr. Sharma / Team"/>
+              </div>
+            </div>
+            <div>
+              <div class="section-label">Extra context (optional)</div>
+              <input id="email-context" type="text" class="inp"
+                     placeholder="e.g. I missed yesterday's 10am standup"/>
+            </div>
+            <button onclick="generateEmail()" class="btn btn-primary w-full justify-center py-3">
+              <i class="fas fa-envelope-open-text"></i> Generate Email
+            </button>
+          </div>
+
+          <div>
+            <div id="email-loading" class="hidden flex items-center gap-3 text-[#8b949e] text-sm mb-4">
+              <div class="spinner"></div> Writing your email…
+            </div>
+
+            <div id="email-output" class="hidden">
+              <div class="mb-3">
+                <div class="section-label">Subject Line</div>
+                <div id="email-subject"
+                     class="bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-2.5 text-sm text-[#e6edf3] font-medium"></div>
+              </div>
+              <div>
+                <div class="section-label">Email Body</div>
+                <div id="email-body" class="email-pre" style="max-height:340px;overflow-y:auto"></div>
+              </div>
+              <div class="flex gap-2 mt-3 flex-wrap">
+                <button onclick="copyEmail()" class="btn btn-ghost text-xs py-2">
+                  <i class="fas fa-copy"></i> Copy All
+                </button>
+                <button onclick="copyEmailBody()" class="btn btn-ghost text-xs py-2">
+                  <i class="fas fa-align-left"></i> Copy Body
+                </button>
+                <button onclick="generateEmail()" class="btn btn-ghost text-xs py-2">
+                  <i class="fas fa-redo"></i> Regenerate
+                </button>
+              </div>
+            </div>
+
+            <div id="email-empty" class="flex flex-col items-center justify-center py-14 text-center">
+              <div class="text-4xl mb-3">📧</div>
+              <p class="text-[#484f58] text-sm">Your professional email will appear here</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════ APOLOGY ══════════════════════════ -->
+      <div id="tab-apology" class="tab-panel">
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <div>
+              <div class="section-label">Apology Style</div>
+              <div class="grid grid-cols-2 gap-2">
+                {% for val,label,icon in [('professional','Professional','briefcase'),('emotional','Emotional','heart'),('casual','Casual','comment'),('formal','Formal','scroll')] %}
+                <button onclick="setApologyStyle('{{ val }}')" id="apo-{{ val }}"
+                        class="btn btn-ghost apology-btn justify-start gap-2 text-xs py-2.5">
+                  <i class="fas fa-{{ icon }} text-[10px]"></i> {{ label }}
+                </button>
+                {% endfor %}
+              </div>
+            </div>
+            <div>
+              <div class="section-label">Situation to apologise for</div>
+              <textarea id="apo-context" class="inp" rows="4"
+                placeholder="e.g. I missed an important meeting with a client because I forgot to set a reminder. My colleague had to cover for me last minute."></textarea>
+            </div>
+            <div>
+              <div class="section-label">Language</div>
+              <select id="apo-language" class="inp">
+                <option value="en">🇬🇧 English</option>
+                <option value="hi">🇮🇳 Hindi</option>
+                <option value="es">🇪🇸 Spanish</option>
+                <option value="fr">🇫🇷 French</option>
+              </select>
+            </div>
+            <button onclick="generateApology()" class="btn btn-primary w-full justify-center py-3">
+              <i class="fas fa-hands"></i> Generate Apology
+            </button>
+          </div>
+
+          <div>
+            <div id="apo-loading" class="hidden flex items-center gap-3 text-[#8b949e] text-sm mb-4">
+              <div class="spinner"></div> Crafting a sincere apology…
+            </div>
+            <div id="apo-output" class="hidden">
+              <div class="section-label">Your Apology</div>
+              <div id="apo-text" class="output-box leading-relaxed mb-3"></div>
+              <div class="flex gap-2">
+                <button onclick="copyText(document.getElementById('apo-text').textContent,'Apology copied!')" class="btn btn-ghost text-xs py-2">
+                  <i class="fas fa-copy"></i> Copy
+                </button>
+                <button onclick="generateApology()" class="btn btn-ghost text-xs py-2">
+                  <i class="fas fa-redo"></i> Regenerate
+                </button>
+              </div>
+            </div>
+            <div id="apo-empty" class="flex flex-col items-center justify-center py-14 text-center">
+              <div class="text-4xl mb-3">🙏</div>
+              <p class="text-[#484f58] text-sm">Your personalised apology will appear here</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════ PROOF ══════════════════════════ -->
+      <div id="tab-proof" class="tab-panel">
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <div>
+              <div class="section-label">Document Type</div>
+              <div class="grid grid-cols-2 gap-2">
+                {% for val,label,icon in [('medical','Medical Certificate','hospital'),('transportation','Transport Notice','bus'),('technical','IT Incident Report','laptop-code'),('generic','General Letter','file-alt')] %}
+                <button onclick="setProofType('{{ val }}')" id="proof-{{ val }}"
+                        class="btn btn-ghost proof-btn justify-start gap-2 text-xs py-2.5">
+                  <i class="fas fa-{{ icon }} text-[10px]"></i> {{ label }}
+                </button>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="section-label">Your Name on Document</div>
+                <input id="proof-name" type="text" class="inp"
+                       placeholder="{{ current_user.username }}" value="{{ current_user.username }}"/>
+              </div>
+              <div>
+                <div class="section-label">Organisation / Hospital</div>
+                <input id="proof-org" type="text" class="inp"
+                       placeholder="e.g. City General Hospital"/>
+              </div>
+            </div>
+            <div>
+              <div class="section-label">Scenario (context for document)</div>
+              <input id="proof-scenario" type="text" class="inp"
+                     placeholder="e.g. Was unable to attend work due to illness"/>
+            </div>
+            <button onclick="generateProof()" class="btn btn-ember w-full justify-center py-3">
+              <i class="fas fa-file-signature"></i> Generate Proof Document
+            </button>
+            <p class="text-[#484f58] text-xs">
+              <i class="fas fa-shield-alt text-[#22d3ee]"></i>
+              Documents are for entertainment/creative purposes only.
+            </p>
+          </div>
+
+          <div>
+            <div id="proof-loading" class="hidden flex items-center gap-3 text-[#8b949e] text-sm mb-4">
+              <div class="spinner"></div> Generating document…
+            </div>
+            <div id="proof-output" class="hidden">
+              <div class="section-label">Generated Document</div>
+              <img id="proof-img" src="" alt="Proof document" class="proof-img w-full mb-3"/>
+              <div class="flex gap-2">
+                <button onclick="downloadProof()" class="btn btn-ghost text-xs py-2">
+                  <i class="fas fa-download"></i> Download PNG
+                </button>
+                <button onclick="generateProof()" class="btn btn-ghost text-xs py-2">
+                  <i class="fas fa-redo"></i> Regenerate
+                </button>
+              </div>
+            </div>
+            <div id="proof-empty" class="flex flex-col items-center justify-center py-14 text-center">
+              <div class="text-4xl mb-3">📄</div>
+              <p class="text-[#484f58] text-sm">Your document will render here</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════ EMERGENCY ══════════════════════════ -->
+      <div id="tab-emergency" class="tab-panel">
+        <div class="grid lg:grid-cols-2 gap-6">
+
+          <!-- Left: setup -->
+          <div class="space-y-5">
+            <!-- SOS button -->
+            <div class="text-center py-6">
+              <div class="text-[#484f58] text-xs mb-4 font-display uppercase tracking-widest">One-Tap Emergency Trigger</div>
+              <button id="sosBtn" onclick="triggerSOS()"
+                      class="btn btn-red w-36 h-36 rounded-full flex-col gap-2 justify-center mx-auto text-xl font-black"
+                      style="animation:sosPulse 1.8s ease-in-out infinite">
+                <i class="fas fa-bolt text-2xl"></i>
+                <span class="font-display text-sm">SOS</span>
+              </button>
+              <p class="text-[#484f58] text-xs mt-4">Press to instantly activate your emergency script</p>
+            </div>
+
+            <!-- Config -->
+            <div class="card p-4 space-y-3">
+              <div class="font-display font-bold text-white text-sm">Configure Emergency</div>
+              <div>
+                <div class="section-label">Emergency Type</div>
+                <select id="emer-scenario" class="inp">
+                  <option value="family_emergency">🏠 Family Emergency</option>
+                  <option value="medical">🏥 Medical Emergency</option>
+                  <option value="work_crisis">💼 Work Crisis</option>
+                  <option value="car_breakdown">🚗 Car Breakdown</option>
+                </select>
+              </div>
+              <div>
+                <div class="section-label">Mode</div>
+                <div class="flex gap-2">
+                  <button onclick="setMode('verbal')" id="mode-verbal"
+                          class="btn btn-ghost flex-1 justify-center text-xs py-2 mode-btn">
+                    <i class="fas fa-microphone"></i> Verbal Script
+                  </button>
+                  <button onclick="setMode('sms')" id="mode-sms"
+                          class="btn btn-ghost flex-1 justify-center text-xs py-2 mode-btn">
+                    <i class="fas fa-sms"></i> SMS Message
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contacts -->
+            <div class="card p-4 space-y-3">
+              <div class="font-display font-bold text-white text-sm flex items-center justify-between">
+                Emergency Contacts
+                <button onclick="openContactModal()" class="btn btn-ghost text-xs py-1 px-3">
+                  <i class="fas fa-plus"></i> Add
+                </button>
+              </div>
+              <div id="contact-select" class="space-y-2">
+                {% if contacts %}
+                  {% for c in contacts %}
+                  <div class="contact-card" id="contact-row-{{ c.id }}">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full bg-[#1c2128] flex items-center justify-center text-[#22d3ee] text-xs font-bold">
+                        {{ c.name[0].upper() }}
+                      </div>
+                      <div>
+                        <div class="text-white text-sm font-medium">{{ c.name }}</div>
+                        <div class="text-[#484f58] text-xs">{{ c.phone }} · {{ c.relationship }}</div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <input type="radio" name="sel-contact" value="{{ c.id }}"
+                             data-name="{{ c.name }}" data-phone="{{ c.phone }}"
+                             class="contact-radio accent-cyan-400"/>
+                      <button onclick="deleteContact({{ c.id }})" class="text-[#484f58] hover:text-red-400 text-xs transition-colors">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                  {% endfor %}
+                {% else %}
+                  <p class="text-[#484f58] text-sm text-center py-4" id="no-contacts-msg">
+                    No contacts yet — add one above
+                  </p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: result -->
+          <div>
+            <div id="emer-output" class="hidden">
+              <div class="rounded-xl overflow-hidden mb-4" style="background:#0d1117;border:1px solid #30363d">
+                <!-- Phone mock header -->
+                <div class="px-5 py-3 flex items-center gap-3"
+                     style="background:linear-gradient(135deg,#ef4444,#f97316)">
+                  <i class="fas fa-bolt text-white"></i>
+                  <span class="font-display font-bold text-white text-sm" id="emer-scenario-label">Emergency</span>
+                  <span class="ml-auto text-white text-xs opacity-70" id="emer-time"></span>
+                </div>
+                <!-- Message bubble -->
+                <div class="p-5">
+                  <div class="mb-3">
+                    <div class="section-label">Contact</div>
+                    <div class="text-white font-medium" id="emer-contact-name">—</div>
+                    <div class="text-[#484f58] text-xs" id="emer-contact-phone">—</div>
+                  </div>
+                  <div>
+                    <div class="section-label" id="emer-mode-label">Script / Message</div>
+                    <div id="emer-message"
+                         class="bg-[#1c2128] border border-[#30363d] rounded-xl px-4 py-4 text-sm text-[#e6edf3] leading-relaxed italic"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex gap-2 flex-wrap">
+                <button onclick="copyText(document.getElementById('emer-message').textContent,'Message copied!')"
+                        class="btn btn-ghost text-xs py-2">
+                  <i class="fas fa-copy"></i> Copy Message
+                </button>
+                <button onclick="triggerSOS()" class="btn btn-ghost text-xs py-2">
+                  <i class="fas fa-redo"></i> New Script
+                </button>
+              </div>
+            </div>
+
+            <div id="emer-empty" class="flex flex-col items-center justify-center py-20 text-center">
+              <div class="text-5xl mb-3">🚨</div>
+              <p class="font-display font-bold text-white mb-1">Emergency System Ready</p>
+              <p class="text-[#484f58] text-sm max-w-xs">Configure your scenario and contact, then hit the SOS button</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════ HISTORY ══════════════════════════ -->
+      <div id="tab-history" class="tab-panel">
+        <div class="flex items-center justify-between mb-4">
+          <div class="font-display font-bold text-white">All Generated Excuses</div>
+          <div class="flex gap-2">
+            <button onclick="loadHistory('all')" id="hist-all" class="btn btn-ghost text-xs py-1.5 px-3 hist-filter active-filter">All</button>
+            <button onclick="loadHistory('favorites')" id="hist-fav" class="btn btn-ghost text-xs py-1.5 px-3 hist-filter">⭐ Saved</button>
+          </div>
+        </div>
+        <div id="history-list" class="space-y-3">
+          <div class="flex items-center gap-3 text-[#484f58] text-sm py-8 justify-center">
+            <div class="spinner"></div> Loading history…
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /p-6 -->
+  </div><!-- /card -->
+</div>
+
+<!-- ── Floating SOS -->
+<button id="floatSOS" onclick="goToEmergency()" title="Emergency">
+  <i class="fas fa-bolt"></i>
+</button>
+
+<!-- ── Add Contact Modal -->
+<div id="contactModal" class="modal-bg hidden" onclick="closeContactModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="font-display font-bold text-white text-lg">Add Emergency Contact</h3>
+      <button onclick="closeContactModal()" class="text-[#484f58] hover:text-white transition-colors">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <div class="section-label">Name</div>
+        <input id="c-name" type="text" class="inp" placeholder="e.g. Priya Sharma"/>
+      </div>
+      <div>
+        <div class="section-label">Phone Number</div>
+        <input id="c-phone" type="tel" class="inp" placeholder="+91 98765 43210"/>
+      </div>
+      <div>
+        <div class="section-label">Relationship</div>
+        <select id="c-rel" class="inp">
+          <option>Friend</option><option>Partner</option><option>Parent</option>
+          <option>Sibling</option><option>Colleague</option><option>Other</option>
+        </select>
+      </div>
+      <div class="flex gap-3 pt-1">
+        <button onclick="saveContact()" class="btn btn-primary flex-1 justify-center">
+          <i class="fas fa-save"></i> Save Contact
+        </button>
+        <button onclick="closeContactModal()" class="btn btn-ghost flex-1 justify-center">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let currentExcuseId = null;
+let currentExcuseText = '';
+let selectedUrgency = 'medium';
+let selectedApologyStyle = 'professional';
+let selectedProofType = 'medical';
+let selectedMode = 'verbal';
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initTabs('#mainTabs');
+  setUrgency('medium');
+  setApologyStyle('professional');
+  setProofType('medical');
+  setMode('verbal');
+  loadHistory('all');
+});
+
+// ── Urgency / style selectors ─────────────────────────────────────────────────
+function setUrgency(val) {
+  selectedUrgency = val;
+  document.querySelectorAll('.urgency-btn').forEach(b => {
+    const isActive = b.id === 'urg-' + val;
+    b.className = 'btn flex-1 justify-center urgency-btn text-xs py-2 ' +
+      (isActive ? 'btn-primary' : 'btn-ghost');
+  });
+}
+function setApologyStyle(val) {
+  selectedApologyStyle = val;
+  document.querySelectorAll('.apology-btn').forEach(b => {
+    b.className = 'btn apology-btn justify-start gap-2 text-xs py-2.5 ' +
+      (b.id === 'apo-' + val ? 'btn-primary' : 'btn-ghost');
+  });
+}
+function setProofType(val) {
+  selectedProofType = val;
+  document.querySelectorAll('.proof-btn').forEach(b => {
+    b.className = 'btn proof-btn justify-start gap-2 text-xs py-2.5 ' +
+      (b.id === 'proof-' + val ? 'btn-ember' : 'btn-ghost');
+  });
+}
+function setMode(val) {
+  selectedMode = val;
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.className = 'btn flex-1 justify-center text-xs py-2 mode-btn ' +
+      (b.id === 'mode-' + val ? 'btn-primary' : 'btn-ghost');
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function show(id) { const el=document.getElementById(id); if(el){el.classList.remove('hidden'); el.style.display='';} }
+function hide(id) { const el=document.getElementById(id); if(el){el.classList.add('hidden');} }
+function showFlex(id) { const el=document.getElementById(id); if(el){el.classList.remove('hidden'); el.style.display='flex';} }
+
+async function postJSON(url, body) {
+  const res = await fetch(url, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+// ── Excuse ────────────────────────────────────────────────────────────────────
+async function generateExcuse() {
+  const btn = document.getElementById('btn-gen-excuse');
+  const warning = document.getElementById('excuse-warning');
+  btn.disabled = true;
+  hide('excuse-output'); hide('excuse-empty');
+  showFlex('excuse-loading');
+  try {
+    const data = await postJSON('/api/generate_excuse', {
+      scenario: document.getElementById('ex-scenario').value,
+      urgency: selectedUrgency,
+      language: document.getElementById('ex-language').value,
+      custom_context: document.getElementById('ex-context').value,
+    });
+    currentExcuseId = data.id;
+    currentExcuseText = data.excuse;
+    document.getElementById('excuse-text').textContent = data.excuse;
+    document.getElementById('email-excuse').value = data.excuse;
+    if (warning) warning.classList.remove('hidden');
+    // reset stars
+    document.querySelectorAll('.star').forEach(s => s.classList.remove('on'));
+    // reset fav btn
+    document.getElementById('btn-fav').innerHTML = '<i class="fas fa-star"></i> Save';
+    hide('excuse-loading');
+    showFlex('excuse-output');
+  } catch(e) {
+    hide('excuse-loading');
+    if (warning) warning.classList.remove('hidden');
+    show('excuse-empty');
+    showToast('Generation failed — check API key', 'error');
+  }
+  btn.disabled = false;
+}
+
+function copyExcuse() {
+  copyText(currentExcuseText, 'Excuse copied!');
+}
+
+function useInEmail() {
+  document.getElementById('email-excuse').value = currentExcuseText;
+  document.querySelector('[data-tab="tab-email"]').click();
+  showToast('Excuse loaded into Email tab', 'info');
+}
+
+async function toggleFav() {
+  if (!currentExcuseId) return;
+  try {
+    const data = await postJSON('/api/toggle_favorite', { excuse_id: currentExcuseId });
+    const btn = document.getElementById('btn-fav');
+    btn.innerHTML = data.is_favorite
+      ? '<i class="fas fa-star text-yellow-400"></i> Saved!'
+      : '<i class="fas fa-star"></i> Save';
+    showToast(data.is_favorite ? 'Added to favourites!' : 'Removed from favourites');
+  } catch(e) { showToast('Failed', 'error'); }
+}
+
+async function ratExcuse(val) {
+  document.querySelectorAll('.star').forEach(s => {
+    s.classList.toggle('on', parseInt(s.dataset.val) <= val);
+  });
+  if (!currentExcuseId) return;
+  await postJSON('/api/rate_excuse', { excuse_id: currentExcuseId, rating: val }).catch(()=>{});
+  showToast(`Rated ${val}/5 ⭐`);
+}
+
+// ── Email ─────────────────────────────────────────────────────────────────────
+async function generateEmail() {
+  const excuse = document.getElementById('email-excuse').value.trim();
+  if (!excuse) { showToast('Please add an excuse or reason first', 'error'); return; }
+  hide('email-output'); hide('email-empty');
+  showFlex('email-loading');
+  try {
+    const data = await postJSON('/api/generate_email', {
+      recipient_type: document.getElementById('email-recipient').value,
+      tone: document.getElementById('email-tone').value,
+      excuse,
+      sender_name: document.getElementById('email-sender').value || '{{ current_user.username }}',
+      recipient_name: document.getElementById('email-recip-name').value || 'Sir/Madam',
+      context: document.getElementById('email-context').value,
+      language: document.getElementById('ex-language')?.value || 'en',
+    });
+    document.getElementById('email-subject').textContent = data.subject;
+    document.getElementById('email-body').textContent = data.body;
+    hide('email-loading');
+    show('email-output');
+  } catch(e) {
+    hide('email-loading');
+    show('email-empty');
+    showToast('Email generation failed', 'error');
+  }
+}
+
+function copyEmail() {
+  const subj = document.getElementById('email-subject').textContent;
+  const body = document.getElementById('email-body').textContent;
+  copyText(`Subject: ${subj}\n\n${body}`, 'Email copied!');
+}
+function copyEmailBody() {
+  copyText(document.getElementById('email-body').textContent, 'Body copied!');
+}
+
+// ── Apology ───────────────────────────────────────────────────────────────────
+async function generateApology() {
+  const ctx = document.getElementById('apo-context').value.trim();
+  if (!ctx) { showToast('Please describe the situation', 'error'); return; }
+  hide('apo-output'); hide('apo-empty');
+  showFlex('apo-loading');
+  try {
+    const data = await postJSON('/api/generate_apology', {
+      style: selectedApologyStyle,
+      context: ctx,
+      language: document.getElementById('apo-language').value,
+    });
+    document.getElementById('apo-text').textContent = data.apology;
+    hide('apo-loading');
+    show('apo-output');
+  } catch(e) {
+    hide('apo-loading');
+    show('apo-empty');
+    showToast('Apology generation failed', 'error');
+  }
+}
+
+// ── Proof ─────────────────────────────────────────────────────────────────────
+async function generateProof() {
+  hide('proof-output'); hide('proof-empty');
+  showFlex('proof-loading');
+  try {
+    const data = await postJSON('/api/generate_proof', {
+      proof_type: selectedProofType,
+      scenario: document.getElementById('proof-scenario').value || 'absence',
+      custom_name: document.getElementById('proof-name').value,
+      custom_org: document.getElementById('proof-org').value,
+    });
+    document.getElementById('proof-img').src = data.proof_image;
+    hide('proof-loading');
+    show('proof-output');
+  } catch(e) {
+    hide('proof-loading');
+    show('proof-empty');
+    showToast('Proof generation failed', 'error');
+  }
+}
+
+function downloadProof() {
+  const img = document.getElementById('proof-img').src;
+  const a = document.createElement('a');
+  a.href = img; a.download = 'proof_document.png'; a.click();
+}
+
+// ── Emergency ─────────────────────────────────────────────────────────────────
+async function triggerSOS() {
+  const sel = document.querySelector('.contact-radio:checked');
+  const contactName = sel ? sel.dataset.name : 'Your contact';
+  const contactPhone = sel ? sel.dataset.phone : '';
+
+  const sosBtn = document.getElementById('sosBtn');
+  sosBtn.disabled = true;
+  sosBtn.innerHTML = '<div class="spinner mx-auto"></div>';
+
+  try {
+    const data = await postJSON('/api/trigger_emergency', {
+      scenario: document.getElementById('emer-scenario').value,
+      contact_name: contactName,
+      contact_phone: contactPhone,
+      mode: selectedMode,
+    });
+    document.getElementById('emer-scenario-label').textContent = data.scenario;
+    document.getElementById('emer-time').textContent = data.timestamp;
+    document.getElementById('emer-contact-name').textContent = data.contact;
+    document.getElementById('emer-contact-phone').textContent = data.phone || '—';
+    document.getElementById('emer-mode-label').textContent = selectedMode === 'sms' ? 'SMS Message' : 'Verbal Script';
+    document.getElementById('emer-message').textContent = data.message;
+    hide('emer-empty');
+    show('emer-output');
+    showToast('Emergency script ready!', 'info');
+  } catch(e) {
+    showToast('Emergency trigger failed', 'error');
+  }
+  sosBtn.disabled = false;
+  sosBtn.innerHTML = '<i class="fas fa-bolt text-2xl"></i><span class="font-display text-sm">SOS</span>';
+}
+
+function goToEmergency() {
+  document.querySelector('[data-tab="tab-emergency"]').click();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── Contacts ──────────────────────────────────────────────────────────────────
+function openContactModal() { document.getElementById('contactModal').classList.remove('hidden'); }
+function closeContactModal(e) {
+  if (!e || e.target === document.getElementById('contactModal'))
+    document.getElementById('contactModal').classList.add('hidden');
+}
+
+async function saveContact() {
+  const name = document.getElementById('c-name').value.trim();
+  const phone = document.getElementById('c-phone').value.trim();
+  const rel = document.getElementById('c-rel').value;
+  if (!name || !phone) { showToast('Name and phone are required', 'error'); return; }
+  try {
+    const data = await postJSON('/api/save_contact', {name, phone, relationship: rel});
+    if (!data.success) { showToast(data.message, 'error'); return; }
+    showToast('Contact saved!');
+    closeContactModal();
+    // Inject into DOM
+    const noMsg = document.getElementById('no-contacts-msg');
+    if (noMsg) noMsg.remove();
+    const row = document.createElement('div');
+    row.className = 'contact-card';
+    row.id = 'contact-row-' + data.id;
+    row.innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-[#1c2128] flex items-center justify-center text-[#22d3ee] text-xs font-bold">${name[0].toUpperCase()}</div>
+        <div>
+          <div class="text-white text-sm font-medium">${name}</div>
+          <div class="text-[#484f58] text-xs">${phone} · ${rel}</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="radio" name="sel-contact" value="${data.id}" data-name="${name}" data-phone="${phone}" class="contact-radio accent-cyan-400"/>
+        <button onclick="deleteContact(${data.id})" class="text-[#484f58] hover:text-red-400 text-xs transition-colors"><i class="fas fa-trash"></i></button>
+      </div>`;
+    document.getElementById('contact-select').appendChild(row);
+    ['c-name','c-phone'].forEach(id => document.getElementById(id).value='');
+  } catch(e) { showToast('Failed to save', 'error'); }
+}
+
+async function deleteContact(id) {
+  const res = await fetch('/api/delete_contact/'+id,{method:'DELETE'});
+  const data = await res.json();
+  if (data.success) {
+    document.getElementById('contact-row-'+id)?.remove();
+    showToast('Contact removed');
+  }
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+async function loadHistory(filter='all') {
+  document.querySelectorAll('.hist-filter').forEach(b => b.classList.remove('active-filter','btn-primary'));
+  const active = document.getElementById(filter==='all'?'hist-all':'hist-fav');
+  if(active){active.classList.add('active-filter','btn-primary');}
+
+  const list = document.getElementById('history-list');
+  list.innerHTML = '<div class="flex gap-3 items-center justify-center text-[#484f58] text-sm py-8"><div class="spinner"></div> Loading…</div>';
+
+  try {
+    const res = await fetch('/api/get_history');
+    let items = await res.json();
+    if(filter==='favorites') items = items.filter(i=>i.is_favorite);
+    if(!items.length){
+      list.innerHTML='<div class="text-center text-[#484f58] text-sm py-12">No excuses yet — generate your first one!</div>';
+      return;
+    }
+    const urgColors = {low:'badge-green', medium:'badge-orange', high:'badge-red'};
+    list.innerHTML = items.map(e=>`
+      <div class="history-card">
+        <div class="flex items-start justify-between gap-3 mb-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="badge badge-cyan text-[10px]">${e.scenario}</span>
+            <span class="badge ${urgColors[e.urgency]||'badge-orange'} text-[10px]">${e.urgency}</span>
+            ${e.is_favorite?'<span class="text-yellow-400 text-xs">⭐</span>':''}
+          </div>
+          <span class="text-[#484f58] text-xs whitespace-nowrap">${e.created_at}</span>
+        </div>
+        <p class="text-[#c9d1d9] text-sm leading-relaxed mb-3">${e.content}</p>
+        <div class="flex gap-2 flex-wrap">
+          <button onclick="copyText('${e.content.replace(/'/g,"&#39;")}','Copied!')" class="btn btn-ghost text-xs py-1 px-3">
+            <i class="fas fa-copy"></i> Copy
+          </button>
+          ${e.effectiveness_score?`<span class="text-yellow-400 text-xs flex items-center gap-1"><i class="fas fa-star"></i> ${e.effectiveness_score}/5</span>`:''}
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    list.innerHTML='<div class="text-red-400 text-sm text-center py-8">Failed to load history</div>';
+  }
+}
+
+// ── Style for active filter btn ───────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const style = document.createElement('style');
+  style.textContent = '.active-filter{background:linear-gradient(135deg,#0ea5e9,#22d3ee)!important;color:#0d1117!important;border-color:transparent!important}';
+  document.head.appendChild(style);
+});
+</script>
+{% endblock %}
